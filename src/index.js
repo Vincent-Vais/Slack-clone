@@ -1,17 +1,67 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import * as serviceWorker from './serviceWorker';
+import React from "react";
+import ReactDOM from "react-dom";
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  withRouter,
+} from "react-router-dom";
+
+import store from "./store";
+import { Provider, connect } from "react-redux";
+import { setUser, clearUser } from "./store/actions";
+
+import App from "./components/app/App";
+import Register from "./components/auth/Register";
+import Login from "./components/auth/Login";
+import Spinner from "./Spinner";
+
+import firebase from "firebase";
+
+import "semantic-ui-css/semantic.min.css";
+
+class Root extends React.Component {
+  componentDidMount() {
+    const { setUser, clearUser, history } = this.props;
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        history.push("/");
+        setUser(user);
+      } else {
+        history.push("/login");
+        clearUser();
+      }
+    });
+  }
+
+  render() {
+    const { isLoading } = this.props;
+    return isLoading ? (
+      <Spinner />
+    ) : (
+      <Switch>
+        <Route exact path="/" component={App} />
+        <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
+      </Switch>
+    );
+  }
+}
+
+const mapStateToProps = ({ user }) => ({
+  isLoading: user.isLoading,
+});
+
+const RootWithAuth = withRouter(
+  connect(mapStateToProps, { setUser, clearUser })(Root)
 );
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
+ReactDOM.render(
+  <Provider store={store}>
+    <Router>
+      <RootWithAuth />
+    </Router>
+  </Provider>,
+  document.getElementById("root")
+);
