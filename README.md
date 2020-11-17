@@ -1,3 +1,3 @@
 # Slack clone
 
-## Chat app built with React and Firebase. 
+## Stack: React, Firebase, Redux, SemanticUI
